@@ -1,2 +1,2 @@
-# android_ar_viewer
-Augmented City Android client  for viewing AR objects
+# Android AR Viewer SDK
+Augmented City Android lib and client for viewing AR objects
