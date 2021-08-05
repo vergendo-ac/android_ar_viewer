@@ -1,0 +1,3 @@
+[submodule "android_ac_api_sdk"]
+	path = android_ac_api_sdk
+	url = git@github.com:vergendo-ac/android_ac_api_sdk.git

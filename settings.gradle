@@ -6,4 +6,6 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "AC AR Viewer"
+include ':ac-api'
+project(':ac-api').projectDir = new File('android_ac_api_sdk/ac-api')
 include ':app'
