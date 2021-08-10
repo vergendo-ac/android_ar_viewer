@@ -8,3 +8,8 @@ dependencyResolutionManagement {
 rootProject.name = "AC AR Viewer"
 include ':ac-api', ':ar-viewer-sample', ':ar-viewer-lib'
 project(':ac-api').projectDir = new File('android_ac_api_sdk/ac-api')
+def arLib = new File('android_ac_lib/ac-core')
+if (arLib.exists()) {
+    include ':ac-core'
+    project(':ac-core').projectDir = arLib
+}

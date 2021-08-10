@@ -10,6 +10,9 @@
 # Java class files
 *.class
 
+# AC Lib
+android_ac_lib/
+
 # Generated files
 bin/
 gen/
