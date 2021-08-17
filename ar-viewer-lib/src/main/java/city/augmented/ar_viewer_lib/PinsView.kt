@@ -8,7 +8,7 @@ import android.view.MotionEvent
 import android.view.View
 import city.augmented.core.extensions.px
 
-class PinDisplay(context: Context, attrs: AttributeSet) : View(context, attrs) {
+class PinsView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private val pinViews = mutableMapOf<String, View>()
     private val pinRects = mutableMapOf<String, Rect>()
     private val headViews = mutableMapOf<String, View>()
@@ -16,7 +16,7 @@ class PinDisplay(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private val resourcesId = mutableMapOf<String, Pair<Drawable?, Int>>()
     private val dashThickness = 2.px
 
-    private var onClickListener: (String) -> Unit = {}
+    var onClickListener: (String) -> Unit = {}
     private var selectedPin: String = ""
 
     private var linePaint: Paint = Paint().apply {

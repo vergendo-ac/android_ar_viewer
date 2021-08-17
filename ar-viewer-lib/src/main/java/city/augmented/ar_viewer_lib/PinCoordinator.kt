@@ -21,7 +21,7 @@ import com.doors.tourist2.utils.kotlinMath.toDistance
 
 class PinCoordinator(
     private val context: Context,
-    private val pinDisplay: PinDisplay
+    private val pinsView: PinsView
 ) {
     private var stickers = mutableMapOf<String, StickerMeta>()
 
@@ -138,10 +138,10 @@ class PinCoordinator(
                 .toMap().toMutableMap()
 
         headPositions = calculateHeadPositions(onScreen).toMutableMap()
-        pinDisplay.clear()
+        pinsView.clear()
         onScreen.forEach { (id, pin) ->
             if (pins[id] != null && stickers[id] != null) {
-                pinDisplay.addSticker(
+                pinsView.addSticker(
                     getPinBounds(
                         pin.x,
                         pin.y
@@ -203,7 +203,7 @@ class PinCoordinator(
         isOnScreen(x.toInt(), y.toInt())
 
     private fun isOnScreen(x: Int, y: Int) =
-        (x > 0 && x < pinDisplay.width) && (y > 0 && y < pinDisplay.height)
+        (x > 0 && x < pinsView.width) && (y > 0 && y < pinsView.height)
 
 
     private fun getBounds(x: Int, y: Int, w: Int, h: Int): Rect {
@@ -279,7 +279,7 @@ class PinCoordinator(
         heads.clear()
         pins.clear()
         selectedPin = ""
-        pinDisplay.clear()
+        pinsView.clear()
     }
 
     private fun getPadding(type: InfoStickerType) = when (type) {
