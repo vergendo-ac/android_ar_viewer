@@ -1,4 +1,4 @@
-package city.augmented.ar_viewer_lib
+package city.augmented.ar_viewer_lib.presentation
 
 import android.content.Context
 import android.graphics.*

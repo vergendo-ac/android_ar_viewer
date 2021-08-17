@@ -3,7 +3,7 @@ package city.augmented.ar_viewer
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import city.augmented.ar_viewer.databinding.ActivityMainBinding
-import city.augmented.ar_viewer_lib.ARViewerFragment
+import city.augmented.ar_viewer_lib.presentation.ARViewerFragment
 import city.augmented.ar_viewer_lib.replaceFragment
 
 class MainActivity : AppCompatActivity(R.layout.activity_main) {

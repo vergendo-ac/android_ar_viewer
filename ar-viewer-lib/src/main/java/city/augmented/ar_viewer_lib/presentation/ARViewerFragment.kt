@@ -1,13 +1,16 @@
-package city.augmented.ar_viewer_lib
+package city.augmented.ar_viewer_lib.presentation
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import city.augmented.ar_viewer_lib.R
+import city.augmented.ar_viewer_lib.components.ARObjectsManager
 import city.augmented.ar_viewer_lib.databinding.FragmentArViewerBinding
 import city.augmented.ar_viewer_lib.entity.ArObject
 import city.augmented.ar_viewer_lib.entity.Sticker
+import city.augmented.ar_viewer_lib.replaceFragment
 import com.google.ar.core.Pose
 import com.google.ar.sceneform.Sceneform
 import com.google.ar.sceneform.ux.ArFragment

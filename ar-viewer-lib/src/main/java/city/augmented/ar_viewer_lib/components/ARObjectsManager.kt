@@ -1,6 +1,7 @@
-package city.augmented.ar_viewer_lib
+package city.augmented.ar_viewer_lib.components
 
 import android.content.Context
+import city.augmented.ar_viewer_lib.presentation.PinsView
 import city.augmented.ar_viewer_lib.entity.*
 import com.doors.tourist2.utils.kotlinMath.Float3
 import com.google.ar.core.Pose

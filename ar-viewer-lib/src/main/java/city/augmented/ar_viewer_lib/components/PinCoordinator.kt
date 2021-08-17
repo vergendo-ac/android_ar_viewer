@@ -1,4 +1,4 @@
-package city.augmented.ar_viewer_lib
+package city.augmented.ar_viewer_lib.components
 
 import android.content.Context
 import android.graphics.Color
@@ -10,6 +10,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import city.augmented.ar_viewer_lib.presentation.PinsView
+import city.augmented.ar_viewer_lib.R
 import city.augmented.ar_viewer_lib.entity.InfoSticker
 import city.augmented.ar_viewer_lib.entity.InfoStickerType
 import city.augmented.ar_viewer_lib.entity.Point
