@@ -1,4 +1,4 @@
-package com.doors.tourist2.utils.kotlinMath
+package city.augmented.ar_viewer_lib.utils.kotlinMath
 
 /*
  * Copyright (C) 2017 Romain Guy
