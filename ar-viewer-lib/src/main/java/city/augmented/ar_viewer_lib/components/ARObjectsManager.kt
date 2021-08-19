@@ -1,17 +1,17 @@
 package city.augmented.ar_viewer_lib.components
 
 import android.content.Context
-import city.augmented.ar_viewer_lib.presentation.PinsView
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import city.augmented.ar_viewer_lib.entity.*
-import com.doors.tourist2.utils.kotlinMath.Float3
+import city.augmented.ar_viewer_lib.presentation.PinsView
+import city.augmented.ar_viewer_lib.utils.kotlinMath.Float3
 import com.google.ar.core.Pose
 import com.google.ar.sceneform.AnchorNode
 import com.google.ar.sceneform.Camera
 import com.google.ar.sceneform.Node
 import com.google.ar.sceneform.Sun
 import com.google.ar.sceneform.ux.ArFragment
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import timber.log.Timber
 
 class ARObjectsManager(
@@ -19,9 +19,6 @@ class ARObjectsManager(
     pinsView: PinsView,
     private val arFragment: ArFragment
 ) {
-    init {
-        arFragment.arSceneView.planeRenderer.isEnabled = false
-    }
     private val pinCoordinator = PinCoordinator(context, pinsView)
 
     // ноды уже размещенных объектов
@@ -31,15 +28,23 @@ class ARObjectsManager(
 
     // новы видеостикеров. имеют свой lifecycle, отличный от 2д стикеров
     private val videoStickerNodes = mutableMapOf<String, VideoNode>()
-    private val _sessionState: MutableStateFlow<ArSceneState> =
-        MutableStateFlow(ArSceneState.STOPPED)
-    val sessionState: StateFlow<ArSceneState>
+
+    private val _sessionState: MutableLiveData<ArSceneState> =
+        MutableLiveData(ArSceneState.STOPPED)
+
+    val sessionState: LiveData<ArSceneState>
         get() = _sessionState
+
     private var currentState: ArSceneState
-        get() = _sessionState.value
+        get() = _sessionState.value!!
         set(value) {
             _sessionState.value = value
         }
+
+    init {
+        arFragment.arSceneView.planeRenderer.isEnabled = false
+        currentState = ArSceneState.READY
+    }
 
     fun updateObjects(arObjects: List<ArObject>, stickers: List<Sticker>, syncPose: Pose) {
         if (currentState == ArSceneState.STOPPED) return
