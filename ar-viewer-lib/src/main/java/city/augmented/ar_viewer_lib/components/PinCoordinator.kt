@@ -10,16 +10,16 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
-import city.augmented.ar_viewer_lib.presentation.PinsView
 import city.augmented.ar_viewer_lib.R
 import city.augmented.ar_viewer_lib.entity.InfoSticker
 import city.augmented.ar_viewer_lib.entity.InfoStickerType
 import city.augmented.ar_viewer_lib.entity.Point
 import city.augmented.ar_viewer_lib.entity.StickerMeta
+import city.augmented.ar_viewer_lib.presentation.PinsView
+import city.augmented.ar_viewer_lib.utils.kotlinMath.toDistance
 import city.augmented.core.extensions.getColorCompat
 import city.augmented.core.extensions.getDrawableCompat
 import city.augmented.core.extensions.px
-import com.doors.tourist2.utils.kotlinMath.toDistance
 
 class PinCoordinator(
     private val context: Context,

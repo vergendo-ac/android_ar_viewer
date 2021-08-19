@@ -1,6 +1,6 @@
 package city.augmented.ar_viewer_lib.entity
 
-import com.doors.tourist2.utils.kotlinMath.Float3
+import city.augmented.ar_viewer_lib.utils.kotlinMath.Float3
 
 enum class StickerType {
     OBJECT3D, INFOSTICKER, VIDEO, IMAGE, CUSTOM;

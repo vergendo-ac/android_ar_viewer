@@ -4,7 +4,7 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
 import city.augmented.ar_viewer_lib.entity.ArObject
-import com.doors.tourist2.utils.kotlinMath.Float3
+import city.augmented.ar_viewer_lib.utils.kotlinMath.Float3
 import com.google.android.filament.filamat.MaterialBuilder
 import com.google.android.filament.filamat.MaterialPackage
 import com.google.ar.core.Anchor
@@ -133,8 +133,8 @@ class VideoNode(
     fun prepareVideo(context: Context) {
         videoPrepared = true
         rotateNode()
-        // фикс странного бага со смещением объекта
-        val scaleFactor = 0.14f
+//         фикс странного бага со смещением объекта
+//        val scaleFactor = 0.14f
 //        ViewRenderable.builder()
 //            .setSizer { Vector3(scaleFactor * 1.8f, scaleFactor, 0.0f) }
 //            .setView(context, R.layout.view_video_sticker).build()
