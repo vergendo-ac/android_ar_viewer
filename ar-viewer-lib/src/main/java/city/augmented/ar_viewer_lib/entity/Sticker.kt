@@ -1,7 +1,5 @@
 package city.augmented.ar_viewer_lib.entity
 
-import city.augmented.ar_viewer_lib.utils.kotlinMath.Float3
-
 enum class StickerType {
     OBJECT3D, INFOSTICKER, VIDEO, IMAGE, CUSTOM;
 
@@ -64,12 +62,6 @@ abstract class VideoSticker(
     val height: Float,
 ) : Sticker(stickerId, type, stickerText, path, description)
 
-data class StickerMeta(
-    val stickerInfo: InfoSticker,
-    var position: PinPosition,
-    var shouldShowFull: Boolean = false
-)
-
 enum class Object3dSubtype {
     OBJECT, NAVMESH, TRANSFER, CUSTOM;
 
@@ -112,19 +104,5 @@ enum class InfoStickerType {
                 else -> OTHER
             }
         }
-    }
-}
-
-data class PinPosition(
-    val screenProjection: Point,
-    val worldPosition: Float3
-)
-
-data class Point(
-    val x: Int,
-    val y: Int
-) {
-    override fun toString(): String {
-        return "Point($x, $y)"
     }
 }
