@@ -31,7 +31,7 @@ class SimpleViewerFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.initLocationRepository(requireContext())
+        viewModel.initProviders(requireContext())
         if (savedInstanceState == null)
             parentFragmentManager.replaceFragment<ARViewerFragment>(R.id.viewer_fragment_container) { fragment ->
                 fragment.setOnFragmentReadyListener {
@@ -47,6 +47,7 @@ class SimpleViewerFragment : Fragment() {
             localizingJob = lifecycleScope.launchWhenResumed {
                 fragment.imageDataFlow.collect { data ->
                     Timber.i("Image data taken! Pose = ${data.syncPose}")
+                    viewModel.prepareLocalizationRequest(data)
                 }
             }
         }
