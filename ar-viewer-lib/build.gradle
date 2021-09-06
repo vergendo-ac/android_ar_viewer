@@ -38,9 +38,9 @@ android {
 dependencies {
 
     if (findProject(':ac-core') != null)
-        implementation project(':ac-core')
+        api project(':ac-core')
     else
-        implementation files('../libs/ac-core-release.aar')
+        api files('../libs/ac-core-release.aar')
 
     implementation 'androidx.core:core-ktx:1.6.0'
     implementation 'androidx.appcompat:appcompat:1.3.1'
