@@ -4,6 +4,8 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
 import city.augmented.ar_viewer_lib.entity.ArObject
+import city.augmented.ar_viewer_lib.entity.FlatObject
+import city.augmented.ar_viewer_lib.entity.VideoObject
 import city.augmented.ar_viewer_lib.utils.kotlinMath.Float3
 import com.google.android.filament.filamat.MaterialBuilder
 import com.google.android.filament.filamat.MaterialPackage
@@ -21,20 +23,43 @@ import kotlin.math.min
 
 open class ArNode(
     arSceneView: ArSceneView,
-    position: Float3,
+    arObject: ArObject,
     syncPose: Pose
 ) : Node() {
+    val nodeId = arObject.id
+    private var anchorNode: AnchorNode = initPosition(arSceneView, arObject.position, syncPose)
 
-    init {
-        initPosition(arSceneView, position, syncPose)
-    }
-
-    protected fun initPosition(arSceneView: ArSceneView, position: Float3, syncPose: Pose) {
+    private fun initPosition(
+        arSceneView: ArSceneView,
+        position: Float3,
+        syncPose: Pose
+    ): AnchorNode {
         val anchorNode = createAnchor(arSceneView, position, syncPose)
-        setParent(anchorNode)
+        this.setParent(anchorNode)
+        return anchorNode
     }
 
-    fun createAnchor(
+    fun changePosition(arSceneView: ArSceneView, position: Float3, syncPose: Pose) {
+        val oldAnchorNode = anchorNode
+        this.setParent(null)
+        anchorNode = initPosition(arSceneView, position, syncPose)
+        oldAnchorNode.anchor?.detach()
+    }
+
+    // TODO: опробовать новый метод смены координат
+    // TODO: сделать анимацию перемещения ноды
+    private fun changePositionNew(position: Float3, syncPose: Pose) {
+        val pos: Pose = syncPose.compose(
+            Pose.makeTranslation(
+                position.x,
+                position.y,
+                position.z
+            )
+        ).extractTranslation()
+        worldPosition = pos.translation.toVector3()
+    }
+
+    protected fun createAnchor(
         arSceneView: ArSceneView,
         position: Float3,
         syncPose: Pose
@@ -59,11 +84,23 @@ open class ArNode(
     }
 }
 
+class InfoStickerNode(
+    arSceneView: ArSceneView,
+    val arObject: FlatObject,
+    syncPose: Pose
+) : ArNode(arSceneView, arObject, syncPose)
+
+class ModelNode(
+    arSceneView: ArSceneView,
+    arObject: VideoObject,
+    syncPose: Pose
+) : ArNode(arSceneView, arObject, syncPose)
+
 class VideoNode(
     arSceneView: ArSceneView,
-    arObject: ArObject.VideoSticker,
+    arObject: VideoObject,
     syncPose: Pose
-) : ArNode(arSceneView, arObject.position, syncPose) {
+) : ArNode(arSceneView, arObject, syncPose) {
     val videoUrl = arObject.url
     private val placeholderPosition: List<Float3> = arObject.placeholderPosition
     private var mediaPlayer: MediaPlayer = MediaPlayer()
@@ -147,10 +184,13 @@ class VideoNode(
 
     private fun rotateNode() {
         if (nodes.size < 4) return
-        val direction = Vector3.subtract(nodes[2].worldPosition, nodes[3].worldPosition).normalized()
+        val direction =
+            Vector3.subtract(nodes[2].worldPosition, nodes[3].worldPosition).normalized()
         val rotationQuaternion = Quaternion.lookRotation(direction, Vector3.up())
-        val rotatedWith180left = Quaternion.multiply(rotationQuaternion, Quaternion.axisAngle(Vector3.left(), 180f))
-        val rotatedWith180up = Quaternion.multiply(rotatedWith180left, Quaternion.axisAngle(Vector3.up(), 180f))
+        val rotatedWith180left =
+            Quaternion.multiply(rotationQuaternion, Quaternion.axisAngle(Vector3.left(), 180f))
+        val rotatedWith180up =
+            Quaternion.multiply(rotatedWith180left, Quaternion.axisAngle(Vector3.up(), 180f))
         worldRotation =
             Quaternion.multiply(rotatedWith180up, Quaternion.axisAngle(Vector3.down(), 90f))
     }
@@ -198,9 +238,9 @@ class VideoNode(
             .blending(MaterialBuilder.BlendingMode.OPAQUE)
             .material(
                 "void material(inout MaterialInputs material) {\n" +
-                    "    prepareMaterial(material);\n" +
-                    "    material.baseColor = texture(materialParams_videoTexture, getUV0()).rgba;\n" +
-                    "}\n"
+                        "    prepareMaterial(material);\n" +
+                        "    material.baseColor = texture(materialParams_videoTexture, getUV0()).rgba;\n" +
+                        "}\n"
             )
             .build(filamentEngine)
         if (plainVideoMaterialPackage.isValid) {
@@ -328,10 +368,14 @@ class VideoNode(
         }
     }
 
-    fun changePosition(arSceneView: ArSceneView, newPos: ArObject.VideoSticker, newSyncPose: Pose) {
-        initPosition(arSceneView, newPos.position, newSyncPose)
+    fun changePositionAndRotate(
+        arSceneView: ArSceneView,
+        videoObject: VideoObject,
+        newSyncPose: Pose
+    ) {
+        changePosition(arSceneView, videoObject.position, newSyncPose)
         nodes.forEachIndexed { i, node ->
-            val position = newPos.placeholderPosition[i]
+            val position = videoObject.placeholderPosition[i]
             node.setParent(createAnchor(arSceneView, position, newSyncPose))
             Timber.d("new node [$i] position: $position")
         }
@@ -340,7 +384,7 @@ class VideoNode(
         try {
             if (mediaPlayer.videoWidth != 0) {
                 scaleVideoNode(
-                    newPos.placeholderPosition.map { it.toVector3() },
+                    videoObject.placeholderPosition.map { it.toVector3() },
                     mediaPlayer.videoWidth.toFloat(),
                     mediaPlayer.videoHeight.toFloat()
                 )
@@ -408,3 +452,8 @@ private fun Vector3.toFloatArray(): FloatArray =
         this[1] = y
         this[2] = z
     }
+
+private fun FloatArray.toVector3(): Vector3 = if (this.size == 3)
+    Vector3(this[0], this[1], this[2])
+else
+    Vector3()

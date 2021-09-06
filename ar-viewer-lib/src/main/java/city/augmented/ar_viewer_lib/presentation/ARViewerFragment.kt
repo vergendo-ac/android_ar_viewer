@@ -5,14 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LiveData
 import city.augmented.ar_viewer_lib.R
-import city.augmented.ar_viewer_lib.components.ARObjectsManager
-import city.augmented.ar_viewer_lib.components.ArSceneState
+import city.augmented.ar_viewer_lib.components.ArObjectsManager
+import city.augmented.ar_viewer_lib.components.ViewerArObjectsManager
 import city.augmented.ar_viewer_lib.databinding.FragmentArViewerBinding
 import city.augmented.ar_viewer_lib.entity.ArObject
 import city.augmented.ar_viewer_lib.entity.ImageData
-import city.augmented.ar_viewer_lib.entity.Sticker
+import city.augmented.ar_viewer_lib.entity.InfoSticker
 import city.augmented.ar_viewer_lib.utils.replaceFragment
 import city.augmented.ar_viewer_lib.utils.toByteArray
 import com.google.ar.core.Pose
@@ -26,12 +25,9 @@ import timber.log.Timber
 
 class ARViewerFragment : Fragment() {
     private lateinit var binding: FragmentArViewerBinding
-    private lateinit var arManager: ARObjectsManager
-    private lateinit var arFragment: ArFragment
+    private lateinit var arManager: ArObjectsManager
     private var onFragmentReady: (ARViewerFragment) -> Unit = {}
     private var isFragmentExist = true
-    val sessionState: LiveData<ArSceneState>
-        get() = arManager.sessionState
     var acquireImageDelay = 2000L
 
     override fun onCreateView(
@@ -50,8 +46,9 @@ class ARViewerFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         if (Sceneform.isSupported(requireContext())) {
             parentFragmentManager.replaceFragment<ArFragment>(R.id.ar_fragment_container) { fragment ->
-                arFragment = fragment
-                arManager = ARObjectsManager(requireContext(), binding.pinsView, fragment)
+                fragment.arSceneView.planeRenderer.isEnabled = false
+                arManager =
+                    ViewerArObjectsManager(requireContext(), binding.pinsView, fragment.arSceneView)
                 onFragmentReady(this)
             }
         }
@@ -59,7 +56,7 @@ class ARViewerFragment : Fragment() {
 
     val imageDataFlow: Flow<ImageData> = flow {
         while (isFragmentExist) {
-            val frame = arFragment.arSceneView.arFrame
+            val frame = arManager.arView.arFrame
             if (frame != null && frame.camera.trackingState == TrackingState.TRACKING)
                 try {
                     Timber.d("trying acquireCameraImage")
@@ -87,8 +84,9 @@ class ARViewerFragment : Fragment() {
         binding.pinsView.onClickListener = onClick
     }
 
-    fun onLocalized(arObjects: List<ArObject>, stickers: List<Sticker>, syncPose: Pose) =
+    fun onLocalized(arObjects: List<ArObject>, stickers: List<InfoSticker>, syncPose: Pose) {
         arManager.updateObjects(arObjects, stickers, syncPose)
+    }
 
     override fun onDestroy() {
         isFragmentExist = false

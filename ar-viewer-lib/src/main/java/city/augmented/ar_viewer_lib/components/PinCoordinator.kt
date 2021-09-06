@@ -13,8 +13,8 @@ import androidx.core.content.ContextCompat
 import city.augmented.ar_viewer_lib.R
 import city.augmented.ar_viewer_lib.entity.InfoSticker
 import city.augmented.ar_viewer_lib.entity.InfoStickerType
+import city.augmented.ar_viewer_lib.entity.PinData
 import city.augmented.ar_viewer_lib.entity.Point
-import city.augmented.ar_viewer_lib.entity.StickerMeta
 import city.augmented.ar_viewer_lib.presentation.PinsView
 import city.augmented.ar_viewer_lib.utils.kotlinMath.toDistance
 import city.augmented.core.extensions.getColorCompat
@@ -25,12 +25,12 @@ class PinCoordinator(
     private val context: Context,
     private val pinsView: PinsView
 ) {
-    private var stickers = mutableMapOf<String, StickerMeta>()
+    private var dataPins = mutableMapOf<String, PinData>()
 
-    private var heads = mutableMapOf<String, View>()
-    private var pins = mutableMapOf<String, View>()
+    private var headViews = mutableMapOf<String, View>()
+    private var pinViews = mutableMapOf<String, View>()
 
-    private var onScreen = mutableMapOf<String, Point>()
+    private var onScreenPoints = mutableMapOf<String, Point>()
     private var headPositions = mutableMapOf<String, Rect>()
 
     private var selectedPin = ""
@@ -92,108 +92,70 @@ class PinCoordinator(
         }
     }
 
-    private fun createPinViews(stickers: List<StickerMeta>) {
+    private fun createPins(dataPins: List<PinData>) {
 
         //First we need to determine which stickers is really new
-        val newStickers = stickers
-            .filter { !this.stickers.containsKey(it.stickerInfo.stickerId) }
-            .map { it.stickerInfo.stickerId to it }
+        val newDataPins = dataPins
+            .filter { !this.dataPins.containsKey(it.sticker.stickerId) }
+            .map { it.sticker.stickerId to it }
             .toMap().toMutableMap()
 
         //Next we add them to our local cache
-        this.stickers.putAll(newStickers)
+        this.dataPins.putAll(newDataPins)
 
 
         val inflater = LayoutInflater.from(context)
         //Layout views related to this sticker
-        newStickers.forEach { (id, sticker) ->
+        newDataPins.forEach { (id, dataPin) ->
             //Again only views that not created yet
-            if (heads.containsKey(id) && pins.containsKey(id)) return
+            if (headViews.containsKey(id) && pinViews.containsKey(id)) return
 
-            val head = prepareHeadView(inflater, sticker.stickerInfo)
-            heads[id] = layoutView(head)
+            val head = prepareHeadView(inflater, dataPin.sticker)
+            headViews[id] = layoutView(head)
 
-            val pin = preparePinView(context, sticker.stickerInfo)
+            val pin = preparePinView(context, dataPin.sticker)
             pin.layout(0, 0, pinW, pinH)
-            pins[id] = pin
+            pinViews[id] = pin
         }
     }
 
-    fun update(newLocations: List<StickerMeta>) {
-        this.stickers.values.onEach { it.shouldShowFull = false }
-        newLocations.onEach { it.shouldShowFull = false }
-            .filter { isOnScreen(it.position.screenProjection) }
-            .filter { it.stickerInfo.stickerType != InfoStickerType.VIDEO }
-            .sortedBy { it.position.worldPosition.toDistance() }
+    fun update(newPins: List<PinData>) {
+        this.dataPins.values.onEach { it.shouldShowFull = false }
+        newPins.onEach { it.shouldShowFull = false }
+            .filter { isOnScreen(it.position) }
+            .sortedBy { it.relativePosition.toDistance() }
             .take(5)
             .forEach { it.shouldShowFull = true }
 
-        createPinViews(newLocations)
+        createPins(newPins)
 
-        onScreen =
-            newLocations.map {
-                it.stickerInfo.stickerId to it.position.screenProjection
+        onScreenPoints =
+            newPins.map {
+                it.sticker.stickerId to it.position
             }
                 .toMap().filter { isOnScreen(it.value.x, it.value.y) }
                 .toList()
                 .sortedBy { (_, value) -> value.x }
                 .toMap().toMutableMap()
 
-        headPositions = calculateHeadPositions(onScreen).toMutableMap()
+        headPositions = calculateHeadPositions(onScreenPoints).toMutableMap()
         pinsView.clear()
-        onScreen.forEach { (id, pin) ->
-            if (pins[id] != null && stickers[id] != null) {
+        onScreenPoints.forEach { (id, pin) ->
+            if (pinViews[id] != null && dataPins[id] != null) {
                 pinsView.addSticker(
                     getPinBounds(
                         pin.x,
                         pin.y
                     ),
-                    pins[id]!!,
+                    pinViews[id]!!,
                     headPositions[id],
-                    heads[id],
-                    getResources(stickers[id]!!.stickerInfo.stickerType),
+                    headViews[id],
+                    getResources(dataPins[id]!!.sticker.stickerType),
                     id
                 )
             }
         }
     }
-
-    /*fun selectPin(pinId: String) {
-        selectedPin = pinId
-        pins.clear()
-        onScreen.forEach {
-            val pin = ImageView(context).apply {
-                if (selectedPin.isNotBlank()) {
-                    if (selectedPin == it.stickerId) {
-                        setImageResource(getSelectedDrawable(it.stickerType))
-                    } else {
-                        setColorFilter(Color.parseColor("#777777"), PorterDuff.Mode.MULTIPLY)
-                        setImageDrawable(getResources(it.stickerType).first)
-                    }
-                } else {
-                    setImageDrawable(getResources(it.stickerType).first)
-                }
-                val padding = getPadding(it.stickerType).toInt()
-                setPadding(padding, padding, padding, padding)
-            }
-            pin.layout(0, 0, pinW, pinH)
-            pins[it.stickerId] = pin
-        }
-        pinDisplay.clear()
-        for ((i, sticker) in onScreen.withIndex()) {
-            pinDisplay.addSticker(
-                getPinBounds(
-                    sticker.stickerLocation[0],
-                    sticker.stickerLocation[1]
-                ),
-                pins[i],
-                headPositions[i],
-                heads[i],
-                getResources(sticker.stickerType), sticker
-            )
-        }
-        pinDisplay.invalidate()
-    }*/
 
     private fun getPinBounds(x: Int, y: Int) =
         getBounds(x, y, pinW, pinH)
@@ -220,8 +182,8 @@ class PinCoordinator(
     private fun calculateHeadPositions(locations: Map<String, Point>): Map<String, Rect> {
         val processed = mutableMapOf<String, Rect>()
         for ((id, location) in locations) {
-            if (stickers[id]?.shouldShowFull == true)
-                heads[id]?.let { head ->
+            if (dataPins[id]?.shouldShowFull == true)
+                headViews[id]?.let { head ->
                     if (processed.isEmpty()) {
                         processed[id] =
                             getBounds(
@@ -275,11 +237,11 @@ class PinCoordinator(
     }
 
     fun clearPins() {
-        stickers.clear()
-        onScreen.clear()
+        dataPins.clear()
+        onScreenPoints.clear()
         headPositions.clear()
-        heads.clear()
-        pins.clear()
+        headViews.clear()
+        pinViews.clear()
         selectedPin = ""
         pinsView.clear()
     }

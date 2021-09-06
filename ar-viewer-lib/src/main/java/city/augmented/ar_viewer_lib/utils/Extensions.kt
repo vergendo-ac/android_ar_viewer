@@ -9,6 +9,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
 import androidx.fragment.app.replace
+import com.google.ar.sceneform.Camera
+import com.google.ar.sceneform.math.Matrix
+import com.google.ar.sceneform.math.Vector3
 import java.io.ByteArrayOutputStream
 
 inline fun <reified F : Fragment> FragmentManager.replaceFragment(
@@ -46,4 +49,29 @@ fun Image.toByteArray(): ByteArray {
     val out = ByteArrayOutputStream()
     yuvImage.compressToJpeg(Rect(0, 0, yuvImage.width, yuvImage.height), 95, out)
     return out.toByteArray()
+}
+
+fun Camera.isWorldPositionVisible(worldPosition: Vector3): Boolean {
+    val var2 = Matrix()
+    Matrix.multiply(projectionMatrix, viewMatrix, var2)
+    val var5: Float = worldPosition.x
+    val var6: Float = worldPosition.y
+    val var7: Float = worldPosition.z
+    val var8 =
+        var5 * var2.data[3] + var6 * var2.data[7] + var7 * var2.data[11] + 1.0f * var2.data[15]
+    if (var8 < 0f) {
+        return false
+    }
+    val var9 = Vector3()
+    var9.x =
+        var5 * var2.data[0] + var6 * var2.data[4] + var7 * var2.data[8] + 1.0f * var2.data[12]
+    var9.x = var9.x / var8
+    if (var9.x !in -1f..1f) {
+        return false
+    }
+
+    var9.y =
+        var5 * var2.data[1] + var6 * var2.data[5] + var7 * var2.data[9] + 1.0f * var2.data[13]
+    var9.y = var9.y / var8
+    return var9.y in -1f..1f
 }
