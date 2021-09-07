@@ -75,3 +75,19 @@ fun Camera.isWorldPositionVisible(worldPosition: Vector3): Boolean {
     var9.y = var9.y / var8
     return var9.y in -1f..1f
 }
+
+fun <A, B> Iterable<A>.combineWith(
+    another: Iterable<B>,
+    compareBy: (A, B) -> Boolean
+): List<Pair<A, B>> {
+    val newList = mutableListOf<Pair<A, B>>()
+    forEach { aArg ->
+        another.forEach { bArg ->
+            if (compareBy(aArg, bArg))
+                newList.add(
+                    Pair(aArg, bArg)
+                )
+        }
+    }
+    return newList
+}
