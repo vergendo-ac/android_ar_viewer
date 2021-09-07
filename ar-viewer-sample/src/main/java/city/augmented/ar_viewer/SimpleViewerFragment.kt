@@ -49,6 +49,7 @@ class SimpleViewerFragment : Fragment() {
                 "Localized! There is ${it.size} objects nearby",
                 Toast.LENGTH_SHORT
             ).show()
+            viewerFragment?.onLocalized(it)
         }
     }
 

@@ -2,20 +2,19 @@ package city.augmented.ar_viewer_lib.components
 
 import android.content.Context
 import city.augmented.ar_viewer_lib.entity.ArObject
-import city.augmented.ar_viewer_lib.entity.InfoSticker
+import city.augmented.ar_viewer_lib.entity.FlatObject
 import city.augmented.ar_viewer_lib.entity.PinData
 import city.augmented.ar_viewer_lib.entity.Point
 import city.augmented.ar_viewer_lib.presentation.PinsView
 import city.augmented.ar_viewer_lib.utils.isWorldPositionVisible
 import city.augmented.ar_viewer_lib.utils.kotlinMath.Float3
 import com.google.ar.core.Frame
-import com.google.ar.core.Pose
 import com.google.ar.core.TrackingState
 import com.google.ar.sceneform.*
 import com.google.ar.sceneform.math.Vector3
 
 interface ArObjectsManager {
-    fun updateObjects(objects: List<ArObject>, stickers: List<InfoSticker>, syncPose: Pose)
+    fun updateObjects(arObjects: List<ArObject>)
     fun clearObjects()
     val arView: ArSceneView
 }
@@ -34,9 +33,8 @@ class ViewerArObjectsManager(
 
     private fun onFrameUpdate(frame: Frame) {
         if (frame.camera.trackingState == TrackingState.TRACKING) {
-            val newPins = arObjectsNodes.map { it.value }
-                .filterIsInstance<InfoStickerNode>()
-                .map { node ->
+            pinCoordinator.update(arObjectsNodes.map { it.value }
+                .filterIsInstance<InfoStickerNode>().map { node ->
                     val screenPoint = if (isNodeVisible(node))
                         arView.scene.camera.worldToScreenPoint(node.worldPosition).toPoint()
                     else
@@ -45,30 +43,33 @@ class ViewerArObjectsManager(
                     val relativePoint =
                         arView.scene.camera.worldToLocalPoint(node.worldPosition).toFloat3()
 
-                    PinData(screenPoint, relativePoint, node.arObject.stickerData)
+                    PinData(screenPoint, relativePoint, node.flatObject.stickerData)
                 }
-            pinCoordinator.update(newPins)
+            )
         }
     }
 
     private fun isNodeVisible(node: Node): Boolean =
         arView.scene.camera.isWorldPositionVisible(node.worldPosition)
 
-    override fun updateObjects(
-        arObjects: List<ArObject>,
-        stickers: List<InfoSticker>,
-        syncPose: Pose
-    ) {
-//        pinCoordinator.update(stickersMeta.map { it.value })
+    override fun updateObjects(arObjects: List<ArObject>) {
+        // prepare sticker views for drawing
+        pinCoordinator.update(arObjects.filterIsInstance<FlatObject>().map {
+            PinData(
+                Point(-1, -1),
+                Float3(-1f, -1f, -1f),
+                it.stickerData
+            )
+        })
         arObjects.forEach { objectToPlace ->
             if (arObjectsNodes.containsKey(objectToPlace.id))
                 arObjectsNodes[objectToPlace.id]!!.changePosition(
                     arView,
                     objectToPlace.position,
-                    syncPose
+                    objectToPlace.syncPose
                 )
-            else
-                arObjectsNodes[objectToPlace.id] = ArNode(arView, objectToPlace, syncPose)
+            else if (objectToPlace is FlatObject)
+                arObjectsNodes[objectToPlace.id] = InfoStickerNode(arView, objectToPlace)
         }
     }
 
