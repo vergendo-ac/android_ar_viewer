@@ -1,33 +1,23 @@
 package city.augmented.ar_viewer_lib.entity
 
-enum class StickerType {
-    OBJECT3D, INFOSTICKER, VIDEO, IMAGE, CUSTOM;
+import city.augmented.api.entity.InfoStickerType
+import city.augmented.api.entity.Object3dSubtype
+import city.augmented.api.entity.StickerType
 
-    companion object {
-        fun fromString(name: String) = when (name) {
-            "3D" -> OBJECT3D
-            "VIDEO" -> VIDEO
-            "IMAGE" -> IMAGE
-            "CUSTOM" -> CUSTOM
-            else -> INFOSTICKER
-        }
-    }
+interface Sticker {
+    val stickerId: String
+    val type: StickerType
+    val stickerText: String
+    val path: String
+    val description: String
 }
 
-abstract class Sticker(
-    val stickerId: String,
-    val type: StickerType,
-    val stickerText: String,
-    val path: String,
-    val description: String
-)
-
-abstract class InfoSticker(
-    stickerId: String,
-    type: StickerType,
-    stickerText: String,
-    path: String,
-    description: String,
+data class InfoSticker(
+    override val stickerId: String,
+    override val type: StickerType,
+    override val stickerText: String,
+    override val path: String,
+    override val description: String,
     val stickerType: InfoStickerType = InfoStickerType.OTHER,
     val address: String = "",
     val feedbackAmount: Int = 0,
@@ -37,72 +27,27 @@ abstract class InfoSticker(
     val rating: Float = 0f,
     val site: String = "",
     val urlTa: String = ""
-) : Sticker(stickerId, type, stickerText, path, description)
+) : Sticker
 
-abstract class Object3d(
-    stickerId: String,
-    type: StickerType,
-    stickerText: String,
-    path: String,
-    description: String,
+data class Object3d(
+    override val stickerId: String,
+    override val type: StickerType,
+    override val stickerText: String,
+    override val path: String,
+    override val description: String,
     val subType: Object3dSubtype,
     val modelId: String,
     val modelScale: Float,
     val isGrounded: Boolean,
     val isVerticallyAligned: Boolean
-) : Sticker(stickerId, type, stickerText, path, description)
+) : Sticker
 
-abstract class VideoSticker(
-    stickerId: String,
-    type: StickerType,
-    stickerText: String,
-    path: String,
-    description: String,
+data class VideoSticker(
+    override val stickerId: String,
+    override val type: StickerType,
+    override val stickerText: String,
+    override val path: String,
+    override val description: String,
     val width: Float,
     val height: Float,
-) : Sticker(stickerId, type, stickerText, path, description)
-
-enum class Object3dSubtype {
-    OBJECT, NAVMESH, TRANSFER, CUSTOM;
-
-    companion object {
-        fun fromString(name: String) = when (name) {
-            "NAVMESH" -> NAVMESH
-            "TRANSFER" -> TRANSFER
-            "CUSTOM" -> CUSTOM
-            else -> OBJECT
-        }
-    }
-}
-
-enum class InfoStickerType {
-    REST,
-    SHOP,
-    PLACE,
-    OTHER,
-    TEXT,
-    VIDEO;
-
-    override fun toString() =
-        when (this) {
-            REST -> "restaurant"
-            SHOP -> "shop"
-            PLACE -> "place"
-            OTHER -> "other"
-            TEXT -> "text"
-            VIDEO -> "video"
-        }
-
-    companion object {
-        fun fromString(string: String): InfoStickerType {
-            return when (string) {
-                "restaurant" -> REST
-                "shop" -> SHOP
-                "place" -> PLACE
-                "text" -> TEXT
-                "video" -> VIDEO
-                else -> OTHER
-            }
-        }
-    }
-}
+) : Sticker
