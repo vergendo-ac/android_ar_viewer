@@ -32,15 +32,16 @@ fun LocalizationResultDto.toLocalEntities(syncPose: Pose): List<ArObject> {
         val position = placeHolder.pose.position.toFloat3().toLocal(matrix)
         val orientation = placeHolder.pose.orientation.toQuaternion()
         when (val sticker = obj.sticker.toEntity()) {
-            is Object3d -> Model3dObject(placeholderId, position, sticker)
+            is Object3d -> Model3dObject(placeholderId, position, syncPose, sticker)
             is VideoSticker -> VideoObject(
                 placeholderId,
                 position,
+                syncPose,
                 orientation,
                 placeHolder.getNodesPositions().toLocal(matrix),
                 sticker
             )
-            else -> FlatObject(placeholderId, position, sticker as InfoSticker)
+            else -> FlatObject(placeholderId, position, syncPose, sticker as InfoSticker)
         }
 
     } ?: emptyList()

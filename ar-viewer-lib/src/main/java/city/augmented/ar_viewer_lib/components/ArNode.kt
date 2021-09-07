@@ -5,6 +5,7 @@ import android.media.MediaPlayer
 import android.net.Uri
 import city.augmented.ar_viewer_lib.entity.ArObject
 import city.augmented.ar_viewer_lib.entity.FlatObject
+import city.augmented.ar_viewer_lib.entity.Model3dObject
 import city.augmented.ar_viewer_lib.entity.VideoObject
 import city.augmented.ar_viewer_lib.utils.kotlinMath.Float3
 import com.google.android.filament.filamat.MaterialBuilder
@@ -21,13 +22,10 @@ import timber.log.Timber
 import java.nio.ByteBuffer
 import kotlin.math.min
 
-open class ArNode(
-    arSceneView: ArSceneView,
-    arObject: ArObject,
-    syncPose: Pose
-) : Node() {
-    val nodeId = arObject.id
-    private var anchorNode: AnchorNode = initPosition(arSceneView, arObject.position, syncPose)
+open class ArNode(arSceneView: ArSceneView, objectData: ArObject) : Node() {
+    val nodeId = objectData.id
+    private var anchorNode: AnchorNode =
+        initPosition(arSceneView, objectData.position, objectData.syncPose)
 
     private fun initPosition(
         arSceneView: ArSceneView,
@@ -84,25 +82,16 @@ open class ArNode(
     }
 }
 
-class InfoStickerNode(
-    arSceneView: ArSceneView,
-    val arObject: FlatObject,
-    syncPose: Pose
-) : ArNode(arSceneView, arObject, syncPose)
+class InfoStickerNode(arSceneView: ArSceneView, val flatObject: FlatObject) :
+    ArNode(arSceneView, flatObject)
 
-class ModelNode(
-    arSceneView: ArSceneView,
-    arObject: VideoObject,
-    syncPose: Pose
-) : ArNode(arSceneView, arObject, syncPose)
+class ModelNode(arSceneView: ArSceneView, model3dObject: Model3dObject) :
+    ArNode(arSceneView, model3dObject)
 
-class VideoNode(
-    arSceneView: ArSceneView,
-    arObject: VideoObject,
-    syncPose: Pose
-) : ArNode(arSceneView, arObject, syncPose) {
-    val videoUrl = arObject.videoData.path
-    private val placeholderNodes: List<Float3> = arObject.placeholderNodes
+class VideoNode(arSceneView: ArSceneView, videoObject: VideoObject) :
+    ArNode(arSceneView, videoObject) {
+    private val videoUrl = videoObject.videoData.path
+    private val placeholderNodes: List<Float3> = videoObject.placeholderNodes
     private var mediaPlayer: MediaPlayer = MediaPlayer()
     private var isSoundOn = false
     private var resumeRequested = false
@@ -111,7 +100,7 @@ class VideoNode(
     private var videoPrepared = false
 
     init {
-        nodes = createPlaceholderNodes(arSceneView, syncPose)
+        nodes = createPlaceholderNodes(arSceneView, videoObject.syncPose)
     }
 
     private fun createPlaceholderNodes(

@@ -11,10 +11,8 @@ import city.augmented.ar_viewer_lib.components.ViewerArObjectsManager
 import city.augmented.ar_viewer_lib.databinding.FragmentArViewerBinding
 import city.augmented.ar_viewer_lib.entity.ArObject
 import city.augmented.ar_viewer_lib.entity.ImageData
-import city.augmented.ar_viewer_lib.entity.InfoSticker
 import city.augmented.ar_viewer_lib.utils.replaceFragment
 import city.augmented.ar_viewer_lib.utils.toByteArray
-import com.google.ar.core.Pose
 import com.google.ar.core.TrackingState
 import com.google.ar.sceneform.Sceneform
 import com.google.ar.sceneform.ux.ArFragment
@@ -84,8 +82,8 @@ class ARViewerFragment : Fragment() {
         binding.pinsView.onClickListener = onClick
     }
 
-    fun onLocalized(arObjects: List<ArObject>, stickers: List<InfoSticker>, syncPose: Pose) {
-        arManager.updateObjects(arObjects, stickers, syncPose)
+    fun onLocalized(arObjects: List<ArObject>) {
+        arManager.updateObjects(arObjects)
     }
 
     override fun onDestroy() {
