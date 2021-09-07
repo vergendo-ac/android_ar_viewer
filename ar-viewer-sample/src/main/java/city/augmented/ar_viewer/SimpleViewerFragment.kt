@@ -41,13 +41,20 @@ class SimpleViewerFragment : Fragment() {
                 }
             }
         viewModel.errorMessages.observe(viewLifecycleOwner) {
-            Toast.makeText(requireContext(), "Localizing Error: $it", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Localizing error: $it", Toast.LENGTH_SHORT).show()
+        }
+        viewModel.localizationResult.observe(viewLifecycleOwner) {
+            Toast.makeText(
+                requireContext(),
+                "Localized! There is ${it.size} objects nearby",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
     private fun startTakingPictures() = viewerFragment?.let { fragment ->
         if (localizingJob == null) {
-            Timber.d("Starting take picture job")
+            Toast.makeText(requireContext(), "Starting take picture job", Toast.LENGTH_SHORT).show()
             localizingJob = lifecycleScope.launchWhenResumed {
                 fragment.imageDataFlow.collect { data ->
                     Timber.i("Image data taken! Pose = ${data.syncPose}")
