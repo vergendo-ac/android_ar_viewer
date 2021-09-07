@@ -101,8 +101,8 @@ class VideoNode(
     arObject: VideoObject,
     syncPose: Pose
 ) : ArNode(arSceneView, arObject, syncPose) {
-    val videoUrl = arObject.url
-    private val placeholderPosition: List<Float3> = arObject.placeholderPosition
+    val videoUrl = arObject.videoData.path
+    private val placeholderNodes: List<Float3> = arObject.placeholderNodes
     private var mediaPlayer: MediaPlayer = MediaPlayer()
     private var isSoundOn = false
     private var resumeRequested = false
@@ -120,7 +120,7 @@ class VideoNode(
     ): List<Node> {
         val newNodes = mutableListOf<Node>()
 //        for (i in 0..3) {
-        placeholderPosition.forEach { position ->
+        placeholderNodes.forEach { position ->
             newNodes.add(
                 Node().also { node ->
                     node.setParent(
@@ -284,7 +284,7 @@ class VideoNode(
                     mediaPlayer.start()
                     videoTexture.surfaceTexture.setOnFrameAvailableListener { surfaceTexture ->
                         scaleVideoNode(
-                            placeholderPosition.map { it.toVector3() },
+                            placeholderNodes.map { it.toVector3() },
                             mediaPlayer.videoWidth.toFloat(),
                             mediaPlayer.videoHeight.toFloat()
                         )
@@ -375,7 +375,7 @@ class VideoNode(
     ) {
         changePosition(arSceneView, videoObject.position, newSyncPose)
         nodes.forEachIndexed { i, node ->
-            val position = videoObject.placeholderPosition[i]
+            val position = videoObject.placeholderNodes[i]
             node.setParent(createAnchor(arSceneView, position, newSyncPose))
             Timber.d("new node [$i] position: $position")
         }
@@ -384,7 +384,7 @@ class VideoNode(
         try {
             if (mediaPlayer.videoWidth != 0) {
                 scaleVideoNode(
-                    videoObject.placeholderPosition.map { it.toVector3() },
+                    videoObject.placeholderNodes.map { it.toVector3() },
                     mediaPlayer.videoWidth.toFloat(),
                     mediaPlayer.videoHeight.toFloat()
                 )

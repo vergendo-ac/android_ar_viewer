@@ -10,9 +10,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import city.augmented.api.entity.InfoStickerType
 import city.augmented.ar_viewer_lib.R
 import city.augmented.ar_viewer_lib.entity.InfoSticker
-import city.augmented.ar_viewer_lib.entity.InfoStickerType
 import city.augmented.ar_viewer_lib.entity.PinData
 import city.augmented.ar_viewer_lib.entity.Point
 import city.augmented.ar_viewer_lib.presentation.PinsView

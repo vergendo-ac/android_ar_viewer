@@ -1,31 +1,29 @@
 package city.augmented.ar_viewer_lib.entity
 
-import android.net.Uri
 import city.augmented.ar_viewer_lib.utils.kotlinMath.Float3
 import com.google.ar.sceneform.math.Quaternion
 
-abstract class ArObject(
-    val id: String,
+interface ArObject {
+    val id: String
     val position: Float3
-)
+}
 
-abstract class FlatObject(
-    id: String,
-    position: Float3,
+data class FlatObject(
+    override val id: String,
+    override val position: Float3,
     val stickerData: InfoSticker
-) : ArObject(id, position)
+) : ArObject
 
-abstract class VideoObject(
-    id: String,
-    position: Float3,
-    val rotation: Quaternion,
-    val url: String,
-    val placeholderPosition: List<Float3>
-) : ArObject(id, position)
+data class VideoObject(
+    override val id: String,
+    override val position: Float3,
+    val orientation: Quaternion,
+    val placeholderNodes: List<Float3>,
+    val videoData: VideoSticker
+) : ArObject
 
-abstract class Model3dObject(
-    id: String,
-    position: Float3,
-    val resUri: Uri,
-    val rotation: Quaternion
-) : ArObject(id, position)
+data class Model3dObject(
+    override val id: String,
+    override val position: Float3,
+    val modelData: Object3d
+) : ArObject

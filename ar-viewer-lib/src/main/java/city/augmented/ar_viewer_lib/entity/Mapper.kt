@@ -1,6 +1,7 @@
 package city.augmented.ar_viewer_lib.entity
 
 import city.augmented.api.entity.StickerType
+import city.augmented.api.model.PlaceholderNode3dDto
 import city.augmented.api.model.QuaternionDto
 import city.augmented.api.model.StickerDto
 import city.augmented.api.model.Vector3dDto
@@ -30,22 +31,31 @@ fun StickerDto.toEntity(): Sticker {
             width = floatFromString(this.videoWidth),
             height = floatFromString(this.videoHeight)
         )
-        else -> InfoSticker(
-            stickerId = this.stickerId,
-            type = this.type,
-            stickerText = this.stickerText,
-            path = this.path,
-            description = this.description,
-            stickerType = this.infoStickerType,
-            address = this.address,
-            feedbackAmount = intFromString(this.feedbackAmount),
-            image = this.image,
-            phoneNumber = this.phoneNumber,
-            priceCategory = this.priceCategory,
-            rating = floatFromString(this.rating),
-            site = this.site,
-            urlTa = this.urlTa
-        )
+        else -> if (path.endsWith("mp4"))
+            VideoSticker(
+                stickerId = this.stickerId,
+                type = this.type,
+                stickerText = this.stickerText,
+                path = this.path,
+                description = this.description
+            )
+        else
+            InfoSticker(
+                stickerId = this.stickerId,
+                type = this.type,
+                stickerText = this.stickerText,
+                path = this.path,
+                description = this.description,
+                stickerType = this.infoStickerType,
+                address = this.address,
+                feedbackAmount = intFromString(this.feedbackAmount),
+                image = this.image,
+                phoneNumber = this.phoneNumber,
+                priceCategory = this.priceCategory,
+                rating = floatFromString(this.rating),
+                site = this.site,
+                urlTa = this.urlTa
+            )
     }
 }
 
@@ -65,3 +75,4 @@ fun Vector3dDto.toFloatArray() = floatArrayOf(x.toFloat(), y.toFloat(), z.toFloa
 fun Vector3dDto.toFloat3() = Float3(x.toFloat(), y.toFloat(), z.toFloat())
 fun QuaternionDto.toFloatArray() = floatArrayOf(x, y, z, w)
 fun QuaternionDto.toQuaternion() = Quaternion(x, y, z, w)
+fun PlaceholderNode3dDto.getNodesPositions() = frame?.map { it.toFloat3() } ?: listOf()

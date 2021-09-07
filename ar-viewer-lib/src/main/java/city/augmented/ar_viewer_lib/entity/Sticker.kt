@@ -48,6 +48,6 @@ data class VideoSticker(
     override val stickerText: String,
     override val path: String,
     override val description: String,
-    val width: Float,
-    val height: Float,
+    val width: Float = 0f,
+    val height: Float = 0f,
 ) : Sticker
