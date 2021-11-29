@@ -7,12 +7,16 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import city.augmented.ar_viewer.databinding.FragmentSimpleViewerBinding
 import city.augmented.ar_viewer_lib.presentation.ARViewerFragment
 import city.augmented.ar_viewer_lib.utils.replaceFragment
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class SimpleViewerFragment : Fragment() {
@@ -56,11 +60,14 @@ class SimpleViewerFragment : Fragment() {
     private fun startTakingPictures() = viewerFragment?.let { fragment ->
         if (localizingJob == null) {
             Toast.makeText(requireContext(), "Starting take picture job", Toast.LENGTH_SHORT).show()
-            localizingJob = lifecycleScope.launchWhenResumed {
-                fragment.imageDataFlow.collect { data ->
-                    Timber.i("Image data taken! Pose = ${data.syncPose}")
-                    viewModel.prepareLocalizationRequest(data)
-                }
+            localizingJob = lifecycleScope.launch {
+                fragment.imageDataFlow
+                    .flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
+                    .catch { Timber.d("Error on try collect imageData: $it") }
+                    .collect { data ->
+                        Timber.i("Image data taken! Pose = ${data.syncPose}")
+                        viewModel.prepareLocalizationRequest(data)
+                    }
             }
         }
     }
