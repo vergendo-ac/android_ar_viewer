@@ -8,6 +8,7 @@ import city.augmented.ar_viewer_lib.entity.Point
 import city.augmented.ar_viewer_lib.presentation.PinsView
 import city.augmented.ar_viewer_lib.utils.isWorldPositionVisible
 import city.augmented.ar_viewer_lib.utils.kotlinMath.Float3
+import com.google.ar.core.Config
 import com.google.ar.core.Frame
 import com.google.ar.core.TrackingState
 import com.google.ar.sceneform.*
@@ -26,6 +27,7 @@ class ViewerArObjectsManager(
 ) : ArObjectsManager {
     private val pinCoordinator = PinCoordinator(context, pinsView)
     private val arObjectsNodes = mutableMapOf<String, ArNode>()
+    private var shouldUpdateFocus = true
 
     init {
         arView.scene.addOnUpdateListener { arView.arFrame?.let { frame -> onFrameUpdate(frame) } }
@@ -46,6 +48,19 @@ class ViewerArObjectsManager(
                     PinData(screenPoint, relativePoint, node.flatObject.stickerData)
                 }
             )
+        }
+        // fix for not working autofocus
+        updateFocus()
+    }
+
+    private fun updateFocus() {
+        if (shouldUpdateFocus && arView.session != null) {
+            val arConfig = Config(arView.session).apply {
+                updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
+                focusMode = Config.FocusMode.AUTO
+            }
+            arView.session?.configure(arConfig)
+            shouldUpdateFocus = false
         }
     }
 
@@ -76,7 +91,7 @@ class ViewerArObjectsManager(
     override fun clearObjects() = arView.scene.children.forEach { node ->
         if (node is AnchorNode)
             node.anchor?.detach()
-        if (node !is Camera && node !is Sun)
+        if (node !is Camera)
             node.setParent(null)
     }
 }

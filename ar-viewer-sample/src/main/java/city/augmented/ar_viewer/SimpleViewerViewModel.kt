@@ -18,6 +18,8 @@ import city.augmented.core.providers.LocationProvider
 import com.google.android.gms.location.FusedLocationProviderClient
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import timber.log.Timber
 
 class SimpleViewerViewModel : ViewModel() {
@@ -39,14 +41,14 @@ class SimpleViewerViewModel : ViewModel() {
         locationProvider = GmsLocationProvider(FusedLocationProviderClient(context))
     }
 
-    fun prepareLocalizationRequest(imageData: ImageData) = viewModelScope.launch {
+    suspend fun prepareLocalizationRequest(imageData: ImageData) {
         Timber.i("Attempt to send localize request")
         val loc = locationProvider.locationsFlow.first()
         localizerApiClient.localize(
             ImageDescriptionDto(GpsDto(loc.latitude, loc.longitude)),
             imageData.imageBytes
         ).ifLeft {
-            Timber.d("Not localized...")
+            Timber.d("Not localized. $it")
             _errorMessages.value = it.message
         }.ifRight {
             Timber.d("Localized!")

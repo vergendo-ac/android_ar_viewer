@@ -3,10 +3,15 @@ package city.augmented.ar_viewer_lib.presentation
 import android.content.Context
 import android.graphics.*
 import android.graphics.drawable.Drawable
+import android.os.Handler
+import android.os.Looper
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import city.augmented.core.extensions.px
+import java.util.*
+import kotlin.concurrent.schedule
+import kotlin.math.abs
 
 class PinsView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private val pinViews = mutableMapOf<String, View>()
@@ -14,20 +19,7 @@ class PinsView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private val headViews = mutableMapOf<String, View>()
     private val headRects = mutableMapOf<String, Rect>()
     private val resourcesId = mutableMapOf<String, Pair<Drawable?, Int>>()
-    private val dashThickness = 2.px
-
-    var onClickListener: (String) -> Unit = {}
     private var selectedPin: String = ""
-
-    private var linePaint: Paint = Paint().apply {
-        isAntiAlias = true
-        style = Paint.Style.STROKE
-        strokeWidth = dashThickness
-    }
-
-    private val headPaint = Paint().apply {
-        isAntiAlias = true
-    }
 
     fun clear() {
         pinViews.clear()
@@ -39,8 +31,32 @@ class PinsView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         invalidate()
     }
 
+    private val dashThickness = 2.px
+    private val longClickDelay = 2000L
+
+    private var lastActionDownTime = 0L
+    private var lastActionDownX = -1
+    private var lastActionDownY = -1
+    private var lastKnownX = -1
+    private var lastKnownY = -1
+    private var fingerStillDown = false
+
+    private var linePaint: Paint = Paint().apply {
+        isAntiAlias = true
+        style = Paint.Style.STROKE
+        strokeWidth = dashThickness
+    }
+
+    private var onClickListener: (String) -> Unit = {}
+    private var onLongClickListener: (String) -> Unit = {}
+    private var timer: Timer? = null
+
     fun setOnclickListener(listener: (String) -> Unit) {
         onClickListener = listener
+    }
+
+    fun setOnLongClickListener(listener: (String) -> Unit) {
+        onLongClickListener = listener
     }
 
     fun addSticker(
@@ -65,26 +81,67 @@ class PinsView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         event?.let {
             when (event.action) {
+                MotionEvent.ACTION_MOVE -> {
+                    lastKnownX = event.x.toInt()
+                    lastKnownY = event.y.toInt()
+                }
+                MotionEvent.ACTION_DOWN -> {
+                    lastActionDownTime = System.currentTimeMillis()
+                    lastActionDownX = event.x.toInt()
+                    lastActionDownY = event.y.toInt()
+                    startChecking()
+                    fingerStillDown = true
+                }
                 MotionEvent.ACTION_UP -> {
-                    pinRects.filterValues { value ->
-                        value.contains(
-                            event.x.toInt(),
-                            event.y.toInt()
-                        )
-                    }.forEach { (key, _) -> onClickListener(key) }
-
-                    headRects.filterValues { value ->
-                        value.contains(
-                            event.x.toInt(),
-                            event.y.toInt()
-                        )
-                    }.forEach { (key, _) -> onClickListener(key) }
+                    fingerStillDown = false
+                    timer?.cancel()
+                    val currentActionUpTime = System.currentTimeMillis()
+                    if (currentActionUpTime - lastActionDownTime < longClickDelay) {
+                        onPin(event.x.toInt(), event.y.toInt(), onClickListener)
+                        onHead(event.x.toInt(), event.y.toInt(), onClickListener)
+                    }
                 }
             }
             return true
         }
         return true
     }
+
+    private fun onPin(x: Int, y: Int, onClick: (String) -> Unit) {
+        pinRects
+            .filterValues { value -> value.contains(x, y) }
+            .forEach { (key, _) -> onClick(key) }
+    }
+
+    private fun onHead(x: Int, y: Int, onClick: (String) -> Unit) {
+        headRects
+            .filterValues { value -> value.contains(x, y) }
+//            .firstNotNullOfOrNull { it.key }
+//            ?.let { key -> onClick(key) }
+            .forEach { (key, _) -> onClick(key) }
+    }
+
+    private fun startChecking() {
+        val handler = Handler(Looper.getMainLooper())
+        timer = Timer().apply {
+            schedule(longClickDelay) {
+                if (
+                    fingerStillDown
+                    && abs(lastKnownX - lastActionDownX) < 30
+                    && abs(lastKnownY - lastActionDownY) < 30
+                ) {
+                    onPin(lastActionDownX, lastActionDownY) {
+                        handler.post { onLongClickListener(it) }
+                    }
+                    onHead(lastActionDownX, lastActionDownY) {
+                        handler.post { onLongClickListener(it) }
+                    }
+                }
+                fingerStillDown = false
+            }
+        }
+    }
+
 
     override fun onDraw(canvas: Canvas?) {
         if (pinViews.isEmpty()) return
@@ -97,6 +154,10 @@ class PinsView(context: Context, attrs: AttributeSet) : View(context, attrs) {
                     pinRects.getValue(key).exactCenterX() - pinViews.getValue(key).width / 2,
                     pinRects.getValue(key).exactCenterY() - pinViews.getValue(key).height / 2
                 )
+                // update size of pin view
+                pinRects[key]?.let { pinRect ->
+                    view.layout(pinRect.left, pinRect.top, pinRect.right, pinRect.bottom)
+                }
                 // Draw the View and clear the translation
                 view.draw(canvas)
                 canvas.restore()
@@ -144,4 +205,10 @@ class PinsView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         paint.color = color
         canvas.drawLine(start.x, start.y, finish.x, finish.y, paint)
     }
+
+    override fun onDetachedFromWindow() {
+        timer?.cancel()
+        super.onDetachedFromWindow()
+    }
+
 }

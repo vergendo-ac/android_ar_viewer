@@ -5,9 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import arrow.core.Either
+import arrow.core.Left
+import arrow.core.Right
 import city.augmented.ar_viewer_lib.R
 import city.augmented.ar_viewer_lib.components.ArObjectsManager
 import city.augmented.ar_viewer_lib.components.ViewerArObjectsManager
+import city.augmented.ar_viewer_lib.data.ViewerError
 import city.augmented.ar_viewer_lib.databinding.FragmentArViewerBinding
 import city.augmented.ar_viewer_lib.entity.ArObject
 import city.augmented.ar_viewer_lib.entity.ImageData
@@ -56,13 +60,14 @@ class ARViewerFragment : Fragment() {
         }
     }
 
-    val imageDataFlow: Flow<ImageData> = flow {
+    val imageDataFlow: Flow<Either<ViewerError, ImageData>> = flow {
         while (isFragmentExist) {
             try {
                 requestFrame()?.let { imageData ->
-                    emit(imageData)
+                    emit(Right(imageData))
                 }
             } catch (e: Exception) {
+                emit(Left(ViewerError.AcquireImageError))
                 Timber.d("Failed to request image^ $e")
             }
             delay(acquireImageDelay)
@@ -80,12 +85,16 @@ class ARViewerFragment : Fragment() {
 
             image.close()
 
-            ImageData(imageBytes, 0, syncPose)
+            ImageData(
+                imageBytes,
+                0, // TODO: Put correct value or remove parameter
+                syncPose
+            )
         } else null
     }
 
     fun setOnPinClickListener(onClick: (String) -> Unit) {
-        binding.pinsView.onClickListener = onClick
+        binding.pinsView.setOnclickListener(onClick)
     }
 
     fun onLocalized(arObjects: List<ArObject>) {

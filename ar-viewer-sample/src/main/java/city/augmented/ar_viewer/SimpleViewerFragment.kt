@@ -10,6 +10,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import city.augmented.api.ifRight
 import city.augmented.ar_viewer.databinding.FragmentSimpleViewerBinding
 import city.augmented.ar_viewer_lib.presentation.ARViewerFragment
 import city.augmented.ar_viewer_lib.utils.replaceFragment
@@ -65,8 +66,10 @@ class SimpleViewerFragment : Fragment() {
                     .flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
                     .catch { Timber.d("Error on try collect imageData: $it") }
                     .collect { data ->
-                        Timber.i("Image data taken! Pose = ${data.syncPose}")
-                        viewModel.prepareLocalizationRequest(data)
+                        data.ifRight {
+                            Timber.i("Image data taken! Pose = ${it.syncPose}")
+                            viewModel.prepareLocalizationRequest(it)
+                        }
                     }
             }
         }
